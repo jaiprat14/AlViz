@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AlViz Interactive Workspace — Step-by-step canvas algorithm and data structure visualizer." />
+  <title>AlViz — Algorithm Visualizer Workspace</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary:  '#6366f1',
+            secondary:'#8b5cf6',
+            accent:   '#06b6d4',
+            dark:     '#0f172a',
+            darker:   '#020617',
+            surface:  '#1e293b',
+            surface2: '#334155',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="bg-dark text-white font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- ===================== NAVBAR ===================== -->
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 bg-darker/90 backdrop-blur-md border-b border-surface2/40">
+    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-14">
+        <!-- Logo -->
+        <a href="index.html" class="flex items-center gap-2 text-xl font-bold group">
+          <svg class="w-7 h-7 transform group-hover:scale-105 transition-transform" viewBox="0 0 28 28" fill="none">
+            <rect width="28" height="28" rx="7" fill="url(#logoGrad)"/>
+            <path d="M7 20 L10 10 L14 17 L17 12 L21 20" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="0" y1="0" x2="28" y2="28">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#8b5cf6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <span class="gradient-text">AlViz</span>
+        </a>
+
+        <!-- Desktop nav links -->
+        <div class="hidden md:flex items-center gap-6">
+          <a href="index.html" class="text-sm text-slate-400 hover:text-white transition-colors">Home</a>
+          <a href="visualizer.html" class="text-sm text-white font-medium px-3 py-1 bg-surface2/50 rounded-lg border border-surface2">Visualizer</a>
+          <a href="index.html#features" class="text-sm text-slate-400 hover:text-white transition-colors">About</a>
+        </div>
+
+        <!-- Auth buttons (shown when logged out) -->
+        <div id="auth-buttons" class="flex items-center gap-3">
+          <button id="btn-login" onclick="window.AlVizAuth && window.AlVizAuth.showLoginModal()"
+            class="text-sm text-slate-300 hover:text-white transition-colors px-3 py-1.5">
+            Login
+          </button>
+          <button id="btn-register" onclick="window.AlVizAuth && window.AlVizAuth.showRegisterModal()"
+            class="btn-primary text-sm px-4 py-1.5 rounded-lg">
+            Register
+          </button>
+        </div>
+
+        <!-- User info (shown when logged in, hidden by default) -->
+        <div id="user-info" class="hidden items-center gap-3">
+          <span class="text-sm text-slate-300">
+            <span class="text-accent font-medium" id="nav-username"></span>
+          </span>
+          <button id="btn-logout" onclick="window.AlVizAuth && window.AlVizAuth.handleLogout()"
+            class="text-sm text-slate-400 hover:text-red-400 transition-colors px-3 py-1.5">
+            Logout
+          </button>
+        </div>
+
+        <!-- Hamburger (mobile) -->
+        <button id="hamburger" class="md:hidden p-2 rounded-lg hover:bg-surface transition-colors" aria-label="Menu">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path id="ham-open"  stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+            <path id="ham-close" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" class="hidden"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden bg-darker/95 border-t border-surface2/40 px-4 pb-4 pt-2">
+      <a href="index.html" class="block py-2 text-sm text-slate-400 hover:text-white">Home</a>
+      <a href="visualizer.html" class="block py-2 text-sm text-white font-medium">Visualizer</a>
+      <a href="index.html#features" class="block py-2 text-sm text-slate-400 hover:text-white">About</a>
+      <div class="flex gap-3 mt-3">
+        <button onclick="window.AlVizAuth && window.AlVizAuth.showLoginModal()"
+          class="text-sm text-slate-300 hover:text-white px-3 py-1.5">Login</button>
+        <button onclick="window.AlVizAuth && window.AlVizAuth.showRegisterModal()"
+          class="btn-primary text-sm px-4 py-1.5 rounded-lg">Register</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===================== MAIN VISUALIZER WORKSPACE ===================== -->
+  <main id="app" class="relative flex-1 bg-darker pt-16 pb-3 px-2 sm:px-4 flex flex-col">
+    <div class="max-w-screen-2xl mx-auto w-full flex-1 flex flex-col min-h-0">
+
+      <!-- Mobile: Hamburger to open sidebar drawer -->
+      <div class="flex md:hidden items-center gap-3 mb-2 px-1">
+        <button id="sidebar-toggle" class="btn-icon" aria-label="Open algorithm list">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+        <span id="mobile-algo-title" class="text-sm font-semibold text-slate-300">Bubble Sort</span>
+        <button id="mobile-info-btn" class="ml-auto btn-icon" aria-label="Show info">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 3-Column Layout: Left Sidebar + Center Canvas + Right Controls -->
+      <div class="flex gap-3 flex-1 min-h-[580px] h-[calc(100vh-5rem)]">
+
+        <!-- ===== LEFT SIDEBAR ===== -->
+        <aside id="left-sidebar"
+          class="sidebar-left w-72 flex-shrink-0 hidden md:flex flex-col bg-surface rounded-xl border border-surface2 overflow-hidden shadow-lg">
+
+          <!-- Category tabs -->
+          <div class="flex border-b border-surface2 p-1 gap-1 bg-darker/40">
+            <button class="category-tab active" data-category="sorting">Sort</button>
+            <button class="category-tab" data-category="searching">Search</button>
+            <button class="category-tab" data-category="graph">Graph</button>
+            <button class="category-tab" data-category="trees">DS</button>
+          </div>
+
+          <!-- Algorithm list -->
+          <div class="flex-1 overflow-y-auto py-2 px-1 space-y-0.5" id="algo-list">
+            <!-- Populated dynamically by JS -->
+          </div>
+
+          <!-- Save dataset button (visible when logged in) -->
+          <div id="save-dataset-section" class="hidden p-3 border-t border-surface2 bg-darker/30">
+            <button id="btn-save-dataset"
+              class="w-full btn-secondary text-sm py-2 rounded-lg flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+              </svg>
+              Save Dataset
+            </button>
+          </div>
+        </aside>
+
+        <!-- ===== CENTER CANVAS PANEL ===== -->
+        <div class="flex-1 flex flex-col bg-surface rounded-xl border border-surface2 overflow-hidden min-w-0 shadow-lg">
+          <!-- Canvas toolbar -->
+          <div class="flex items-center justify-between px-4 py-2 border-b border-surface2 bg-surface/80">
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 rounded-full bg-red-500/70"></div>
+              <div class="w-3 h-3 rounded-full bg-yellow-500/70"></div>
+              <div class="w-3 h-3 rounded-full bg-green-500/70"></div>
+            </div>
+            <span id="canvas-algo-label" class="text-xs text-slate-400 font-mono font-medium">bubble-sort · O(n²)</span>
+            <div class="flex items-center gap-2">
+              <div id="loading-spinner" class="spinner hidden"></div>
+              <span id="step-counter" class="text-xs text-slate-400 font-mono">Step 0 / 0</span>
+            </div>
+          </div>
+
+          <!-- Canvas container -->
+          <div id="canvas-container" class="flex-1 relative overflow-hidden bg-darker">
+            <canvas id="viz-canvas"></canvas>
+            <!-- Overlay shown before first run -->
+            <div id="canvas-overlay" class="absolute inset-0 flex flex-col items-center justify-center gap-4 pointer-events-none">
+              <svg class="w-16 h-16 text-surface2" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 64 64">
+                <rect x="8" y="8" width="48" height="48" rx="8"/>
+                <path d="M20 44 L28 24 L36 36 L40 28 L48 44" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <p class="text-slate-500 text-sm">Press <kbd class="kbd">Play</kbd> or <kbd class="kbd">Step Forward</kbd> to begin visualization</p>
+            </div>
+          </div>
+
+          <!-- Mobile: compact controls strip -->
+          <div class="flex md:hidden items-center gap-2 px-3 py-2 border-t border-surface2 bg-surface/80">
+            <button id="m-btn-reset"    class="playback-btn" title="Reset">↩</button>
+            <button id="m-btn-stepback" class="playback-btn" title="Step Back">⏮</button>
+            <button id="m-btn-play"     class="playback-btn-primary" title="Play/Pause">▶</button>
+            <button id="m-btn-stepfwd"  class="playback-btn" title="Step Forward">⏭</button>
+            <input type="range" id="m-speed-slider" min="1" max="10" value="5" class="range-slider flex-1 ml-2" title="Speed"/>
+          </div>
+        </div>
+
+        <!-- ===== RIGHT SIDEBAR (Controls) ===== -->
+        <aside id="right-sidebar"
+          class="sidebar-right w-80 flex-shrink-0 hidden md:flex flex-col bg-surface rounded-xl border border-surface2 overflow-hidden shadow-lg">
+
+          <div class="p-4 border-b border-surface2 bg-darker/40">
+            <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Controls &amp; Metrics</h2>
+          </div>
+
+          <div class="flex-1 overflow-y-auto p-4 space-y-5">
+
+            <!-- Input section -->
+            <div class="space-y-3">
+              <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Input Data</h3>
+
+              <div>
+                <label class="text-xs text-slate-500 mb-1 block">Custom Array (comma or space separated)</label>
+                <textarea id="custom-input"
+                  class="w-full bg-darker border border-surface2 rounded-lg px-3 py-2 text-sm text-slate-200 font-mono
+                         placeholder-slate-600 focus:outline-none focus:border-primary resize-none"
+                  rows="2" placeholder="e.g. 5, 3, 8, 1, 9, 2"></textarea>
+              </div>
+
+              <div class="flex gap-2">
+                <button id="btn-use-input" class="btn-secondary text-xs px-3 py-2 rounded-lg flex-1">
+                  Use Input
+                </button>
+                <button id="btn-random" class="btn-primary text-xs px-3 py-2 rounded-lg flex-1">
+                  Generate Random
+                </button>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs text-slate-500">Array Size</label>
+                  <span id="size-display" class="text-xs text-accent font-mono">50</span>
+                </div>
+                <input type="range" id="size-slider" min="5" max="200" value="50" step="5" class="range-slider w-full" />
+              </div>
+
+              <div>
+                <label class="text-xs text-slate-500 mb-1 block">Input Preset</label>
+                <select id="preset-select"
+                  class="w-full bg-darker border border-surface2 rounded-lg px-3 py-2 text-sm text-slate-300
+                         focus:outline-none focus:border-primary">
+                  <option value="random">Random</option>
+                  <option value="nearly-sorted">Nearly Sorted</option>
+                  <option value="reverse-sorted">Reverse Sorted</option>
+                </select>
+              </div>
+            </div>
+
+            <hr class="border-surface2"/>
+
+            <!-- Playback section -->
+            <div class="space-y-3">
+              <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Playback</h3>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs text-slate-500">Speed</label>
+                  <span id="speed-display" class="text-xs text-accent font-mono">5</span>
+                </div>
+                <input type="range" id="speed-slider" min="1" max="10" value="5" class="range-slider w-full" />
+              </div>
+
+              <div class="grid grid-cols-4 gap-2">
+                <button id="btn-reset"    class="playback-btn col-span-1" title="Reset">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
+                </button>
+                <button id="btn-step-back" class="playback-btn col-span-1" title="Step Back">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/></svg>
+                </button>
+                <button id="btn-play" class="playback-btn-primary col-span-1" title="Play / Pause">
+                  <svg id="play-icon"  class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
+                  <svg id="pause-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                </button>
+                <button id="btn-step-fwd" class="playback-btn col-span-1" title="Step Forward">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <hr class="border-surface2"/>
+
+            <!-- Info panel -->
+            <div class="space-y-3">
+              <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Algorithm Info</h3>
+
+              <div class="space-y-2">
+                <div>
+                  <span class="text-xs text-slate-500">Algorithm</span>
+                  <p id="info-algo-name" class="text-sm font-semibold text-white mt-0.5">Bubble Sort</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="bg-darker rounded-lg p-2 border border-surface2/50">
+                    <span class="text-xs text-slate-500 block">Time</span>
+                    <code id="info-time" class="complexity-code">O(n²)</code>
+                  </div>
+                  <div class="bg-darker rounded-lg p-2 border border-surface2/50">
+                    <span class="text-xs text-slate-500 block">Space</span>
+                    <code id="info-space" class="complexity-code">O(1)</code>
+                  </div>
+                </div>
+
+                <div class="bg-darker rounded-lg p-3 border border-surface2/50">
+                  <span class="text-xs text-slate-500 block mb-1">Current Step</span>
+                  <p id="info-step-desc" class="text-xs text-slate-300 leading-relaxed">
+                    Select an algorithm and press Play to begin.
+                  </p>
+                </div>
+
+                <div class="flex justify-between text-xs text-slate-500">
+                  <span>Step <span id="info-step-current" class="text-accent font-mono">0</span></span>
+                  <span>of <span id="info-step-total" class="text-accent font-mono">0</span></span>
+                </div>
+                <!-- Step progress bar -->
+                <div class="h-1.5 bg-surface2 rounded-full overflow-hidden">
+                  <div id="step-progress" class="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-200" style="width:0%"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Mobile sidebar drawer overlay -->
+    <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black/60 z-40 md:hidden" onclick="window.closeSidebar && window.closeSidebar()"></div>
+
+    <!-- Mobile sidebar drawer -->
+    <div id="mobile-sidebar" class="fixed left-0 top-0 bottom-0 w-72 bg-surface border-r border-surface2 z-50 transform -translate-x-full transition-transform duration-300 md:hidden flex flex-col shadow-2xl">
+      <div class="flex items-center justify-between p-4 border-b border-surface2">
+        <span class="font-semibold text-sm">Algorithms</span>
+        <button onclick="window.closeSidebar && window.closeSidebar()" class="btn-icon">✕</button>
+      </div>
+      <div class="flex border-b border-surface2 p-1 gap-1 bg-darker/40">
+        <button class="category-tab active" data-category="sorting"   data-mobile="1">Sort</button>
+        <button class="category-tab"        data-category="searching" data-mobile="1">Search</button>
+        <button class="category-tab"        data-category="graph"     data-mobile="1">Graph</button>
+        <button class="category-tab"        data-category="trees"     data-mobile="1">DS</button>
+      </div>
+      <div class="flex-1 overflow-y-auto py-2 px-1" id="mobile-algo-list"></div>
+    </div>
+  </main>
+
+  <!-- ===================== SAVE DATASET MODAL ===================== -->
+  <div id="save-dataset-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-box max-w-sm">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-bold">Save Dataset</h2>
+        <button onclick="document.getElementById('save-dataset-modal').classList.add('hidden')" class="btn-icon">✕</button>
+      </div>
+      <form id="save-dataset-form" class="space-y-3">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">Name</label>
+          <input id="ds-name" type="text" class="input-field w-full" placeholder="My Custom Dataset" required maxlength="100"/>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">Description (optional)</label>
+          <textarea id="ds-description" class="input-field w-full resize-none" rows="2" maxlength="500" placeholder="Notes about this dataset..."></textarea>
+        </div>
+        <button type="submit" class="btn-primary w-full py-2.5 rounded-lg font-semibold">Save to Account</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== MOBILE ALGORITHM INFO DRAWER ===================== -->
+  <div id="info-drawer" class="info-drawer">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-sm">Algorithm Info</h3>
+      <button onclick="document.getElementById('info-drawer').classList.remove('open')" class="btn-icon text-xs">✕</button>
+    </div>
+    <p id="drawer-algo-name" class="text-base font-bold text-white mb-3">Bubble Sort</p>
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <div class="bg-darker rounded-lg p-2">
+        <span class="text-xs text-slate-500 block">Time</span>
+        <code id="drawer-time" class="complexity-code">O(n²)</code>
+      </div>
+      <div class="bg-darker rounded-lg p-2">
+        <span class="text-xs text-slate-500 block">Space</span>
+        <code id="drawer-space" class="complexity-code">O(1)</code>
+      </div>
+    </div>
+    <div class="bg-darker rounded-lg p-3">
+      <span class="text-xs text-slate-500 block mb-1">Current Step</span>
+      <p id="drawer-step-desc" class="text-xs text-slate-300 leading-relaxed">Select an algorithm and press Play.</p>
+    </div>
+  </div>
+
+  <!-- ===================== LOGIN MODAL ===================== -->
+  <div id="login-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="login-title">
+    <div class="modal-box">
+      <div class="flex items-center justify-between mb-6">
+        <h2 id="login-title" class="text-lg font-bold">Welcome Back</h2>
+        <button onclick="window.AlVizAuth && window.AlVizAuth.hideModals()" class="btn-icon text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <form id="login-form" class="space-y-4" novalidate>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1" for="login-email">Email</label>
+          <input id="login-email" type="email" autocomplete="email"
+            class="input-field w-full" placeholder="you@example.com" required />
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1" for="login-password">Password</label>
+          <input id="login-password" type="password" autocomplete="current-password"
+            class="input-field w-full" placeholder="••••••••" required />
+        </div>
+        <button type="submit" class="btn-primary w-full py-2.5 rounded-lg font-semibold mt-2">
+          <span id="login-btn-text">Login</span>
+          <span id="login-btn-spinner" class="spinner inline-block ml-2 hidden"></span>
+        </button>
+      </form>
+
+      <p class="text-sm text-center text-slate-500 mt-4">
+        Don't have an account?
+        <button onclick="window.AlVizAuth && window.AlVizAuth.showRegisterModal()" class="text-primary hover:underline">Register</button>
+      </p>
+    </div>
+  </div>
+
+  <!-- ===================== REGISTER MODAL ===================== -->
+  <div id="register-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="reg-title">
+    <div class="modal-box">
+      <div class="flex items-center justify-between mb-6">
+        <h2 id="reg-title" class="text-lg font-bold">Create Account</h2>
+        <button onclick="window.AlVizAuth && window.AlVizAuth.hideModals()" class="btn-icon text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <form id="register-form" class="space-y-4" novalidate>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1" for="reg-username">Username</label>
+          <input id="reg-username" type="text" autocomplete="username"
+            class="input-field w-full" placeholder="cooldev123" required minlength="3" maxlength="30" />
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1" for="reg-email">Email</label>
+          <input id="reg-email" type="email" autocomplete="email"
+            class="input-field w-full" placeholder="you@example.com" required />
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1" for="reg-password">Password</label>
+          <input id="reg-password" type="password" autocomplete="new-password"
+            class="input-field w-full" placeholder="At least 6 characters" required minlength="6" />
+        </div>
+        <button type="submit" class="btn-primary w-full py-2.5 rounded-lg font-semibold mt-2">
+          <span id="reg-btn-text">Create Account</span>
+          <span id="reg-btn-spinner" class="spinner inline-block ml-2 hidden"></span>
+        </button>
+      </form>
+
+      <p class="text-sm text-center text-slate-500 mt-4">
+        Already have an account?
+        <button onclick="window.AlVizAuth && window.AlVizAuth.showLoginModal()" class="text-primary hover:underline">Login</button>
+      </p>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" class="fixed top-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Main visualizer script -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
+

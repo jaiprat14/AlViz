@@ -1,0 +1,33 @@
+{
+  "name": "alviz",
+  "version": "1.0.0",
+  "description": "AlViz — Interactive Algorithm Visualizer mapping directly to CS curriculum",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "server": "cd server && npm start",
+    "server:dev": "cd server && npm run dev",
+    "client": "npx serve client -p 3000",
+    "dev": "concurrently \"npm run server:dev\" \"npm run client\"",
+    "install:server": "cd server && npm install",
+    "install:all": "npm install && npm run install:server"
+  },
+  "keywords": [
+    "algorithm",
+    "visualizer",
+    "computer-science",
+    "data-structures",
+    "canvas",
+    "sorting",
+    "graph",
+    "trees",
+    "education"
+  ],
+  "author": "AlViz Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "serve": "^14.2.1"
+  }
+}
+
